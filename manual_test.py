@@ -1,24 +1,24 @@
 # Copyright (c) 2011 Godefroid Chapelle
-# 
-# This file is part of ipdb.
+#
+# This file is part of pdbi.
 # GNU package is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free 
-# Software Foundation, either version 2 of the License, or (at your option) 
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
 # any later version.
 #
-# GNU package is distributed in the hope that it will be useful, but 
+# GNU package is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
 # for more details.
 
 def output(arg):
-    print("MANUAL: arg=%s" % arg)
+    print("MANUL: arg=%s" % arg)
 
 
 def main():
     for abc in range(10):
-        import ipdb; ipdb.set_trace()
-        output(abc)
+        import pdbi; pdbi.set_trace()
+        output(abc + 1)
 
 
 # code to test with nose
