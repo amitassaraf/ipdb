@@ -32,6 +32,7 @@ Contact me
 ----------
 
 email: amit@helpi.me
+
 linkedin: Amit Assaraf
 
 I'd love to get feedback and suggestions on what I should add/change! Thanks!

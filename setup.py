@@ -28,7 +28,7 @@ else:
 
 setup(name='pdbi',
       version=version,
-      description="IPython-enabled pdb",
+      description="Improved IPython-enabled pdb",
       long_description=long_description,
       classifiers=[
         'Programming Language :: Python :: 2.5',
@@ -41,7 +41,7 @@ setup(name='pdbi',
         'Operating System :: Microsoft :: Windows',
         'Topic :: Software Development :: Debuggers',
       ],
-      keywords='pdb ipython',
+      keywords='pdb ipython pdbi',
       author='Amit Assaraf',
       author_email='amit@helpi.me',
       url='https://github.com/amitassaraf/pdbi',
