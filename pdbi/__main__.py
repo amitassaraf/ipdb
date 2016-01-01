@@ -238,7 +238,7 @@ class Pdbi(Pdb):
     def do_cls(self, arg):
         from sys import platform as _platform
 
-        if 'wind' in _platform:  # Windows
+        if Pdbi.WINDOWS_IDENTIFIER in _platform:  # Windows
             os.system('cls')
         else:
             os.system('clear')
@@ -422,8 +422,8 @@ Continue execution until the end of the program.""", file=self.stdout)
         for index, arg in enumerate(sys.argv, 0):
             if 'ipython' in arg:
                 sys.argv[index] = 'ipython'
-            elif not arg.startswith('-') and not Pdbi._check_number(
-                    arg) and index != 0:  # Wrap all arguments with quotation marks
+            elif not arg.startswith('-') and not Pdbi._check_number(arg) and index != 0:
+                # Wrap all arguments with quotation marks
                 sys.argv[index] = '\"{0}\"'.format(arg.replace('\"', '\''))
 
         return ' '.join(sys.argv)

@@ -46,8 +46,8 @@ Example usage:
 Contact me
 ----------
 
-email: amit@helpi.me
+Email: amit@helpi.me
 
-linkedin: Amit Assaraf
+Linkedin: Amit Assaraf
 
 I'd love to get feedback and suggestions on what I should add/change! Thanks!
