@@ -1,6 +1,9 @@
 Python Debugger Improved
 ========================
 
+pdbi is an improvment on ipdb which is a Python Debugger that exports IPython functionality.
+The improvements are aimed at more powerful debugging as well as fixing useless commands.
+
 Features
 --------
 
@@ -33,9 +36,6 @@ or clone from Github and run:
 
 Use
 ---
-
-pdbi is an improvment on ipdb which is a Python Debugger that exports IPython functionality.
-The improvements are aimed at more powerful debugging as well as fixing useless commands.
 
 Example usage:
 ::
