@@ -12,11 +12,9 @@
 # for more details.
 
 from __future__ import print_function
-from functools import partial
 import sys
 import os
 import traceback
-from IPython.terminal.ipapp import load_default_config
 from IPython.utils.coloransi import TermColors
 
 from contextlib import contextmanager
@@ -42,16 +40,17 @@ def import_module(possible_modules, needed_module):
             if count == 0:
                 raise
 
+
 if IPython.__version__ > '0.10.2':
     from IPython.core.debugger import Pdb, BdbQuit_excepthook
 
-    possible_modules = ['IPython.terminal.ipapp',           # Newer IPython
+    possible_modules = ['IPython.terminal.ipapp',  # Newer IPython
                         'IPython.frontend.terminal.ipapp']  # Older IPython
 
     app = import_module(possible_modules, "TerminalIPythonApp")
     TerminalIPythonApp = app.TerminalIPythonApp
 
-    possible_modules = ['IPython.terminal.embed',           # Newer IPython
+    possible_modules = ['IPython.terminal.embed',  # Newer IPython
                         'IPython.frontend.terminal.embed']  # Older IPython
     embed = import_module(possible_modules, "InteractiveShellEmbed")
     InteractiveShellEmbed = embed.InteractiveShellEmbed
@@ -80,8 +79,6 @@ if IPython.__version__ > '0.10.2':
                 "\nYou are currently into an embedded ipython shell,\n"
                 "the configuration will not be loaded.\n\n"
             )
-
-
 
     def_exec_lines = [line + '\n' for line in ipapp.exec_lines]
 
@@ -116,21 +113,23 @@ else:
         def update_stdout():
             pass
 
+
 def _init_pdb():
     p = Pdbi(def_colors)
     p.rcLines += def_exec_lines
     return p
 
 
-
 class Pdbi(Pdb):
-
     # Used for editing files :D
     NOTEPAD_PLUS_PLUS_PATH = r'C:\Program Files (x86)\Notepad++\notepad++.exe'
     VIM = r'vim'
+    VI = r'vi'
     TMP_EDIT_PATH = 'pdb_edt.tmp'
     NO_DIFF_FLAG = '--no-diff'
     NO_RESTART_FLAG = '--no-restart'
+    PROMPT = 'pdbi> '
+    WINDOWS_IDENTIFIER = 'wind'
 
     # Used to repeat commands
     command_repeat = 1
@@ -140,7 +139,7 @@ class Pdbi(Pdb):
     def __init__(self, *args, **kwargs):
         self.skip = kwargs.get('skip', None)
         Pdb.__init__(self, *args, **kwargs)
-        self.prompt = 'pdbi> '
+        self.prompt = Pdbi.PROMPT
 
     def set_command_repeat(self, arg, frame, callback, command_repeat_deep=False):
         try:
@@ -169,7 +168,7 @@ class Pdbi(Pdb):
         # (CT) stopframe may now also be None, see dispatch_call.
         # (CT) the former test for None is therefore removed from here.
         if self.skip and \
-               self.is_skipped_module(frame.f_globals.get('__name__')):
+                self.is_skipped_module(frame.f_globals.get('__name__')):
             return False
 
         if frame is self.stopframe:
@@ -221,12 +220,12 @@ class Pdbi(Pdb):
 
         print('\n{0} Restarting debugger...\n'.format(TermColors.LightBlue), file=io.stdout)
 
-        os.system(_get_original_python_run_command())
+        os.system(Pdbi._get_original_python_run_command())
 
         # Kill previous debugger.
-        if 'wind' in _platform: # Windows
+        if Pdbi.WINDOWS_IDENTIFIER in _platform:  # Windows
             os.system('taskkill /F /PID {0} > nul 2>&1'.format(os.getpid()))
-        else:                  # Linux
+        else:  # Unix
             os.system('kill -9 {0} > /dev/null 2>&1'.format(os.getpid()))
         return self.do_quit('')
 
@@ -239,7 +238,7 @@ class Pdbi(Pdb):
     def do_cls(self, arg):
         from sys import platform as _platform
 
-        if 'wind' in _platform: # Windows
+        if 'wind' in _platform:  # Windows
             os.system('cls')
         else:
             os.system('clear')
@@ -279,28 +278,35 @@ class Pdbi(Pdb):
 
         shutil.copyfile(filename, Pdbi.TMP_EDIT_PATH)
 
-        if 'wind' in _platform and os.path.exists(Pdbi.NOTEPAD_PLUS_PLUS_PATH): # Windows
+        if Pdbi.WINDOWS_IDENTIFIER in _platform and os.path.exists(Pdbi.NOTEPAD_PLUS_PLUS_PATH):  # Windows
             proc_args = [Pdbi.NOTEPAD_PLUS_PLUS_PATH, filename, '-n{0}'.format(self.curframe.f_lineno)]
-        elif 'wind' in _platform:
-            print('{0} Notepad++ not installed. Ignoring command.'.format(TermColors.LightRed), file=io.stdout)
+        elif Pdbi.WINDOWS_IDENTIFIER in _platform:
+            print('{0} Notepad++ not installed (I am sad now). Ignoring command. {1}'.format(TermColors.LightRed,
+                                                                                             TermColors.Normal),
+                  file=io.stdout)
             return 0
-        else:
-            proc_args = [Pdbi.VIM, '+{0}'.format(self.curframe.f_lineno), filename]
+        else:  # Unix
+            result = subprocess.check_output('which vim', shell=True)
+            if len(result) != 0:
+                proc_args = [Pdbi.VIM, '+{0}'.format(self.curframe.f_lineno), filename]
+            else:
+                proc_args = [Pdbi.VI, '+{0}'.format(self.curframe.f_lineno), filename]
 
         process = subprocess.Popen(proc_args)
         process.wait()
 
         if filename.endswith('.py'):
-            _safe(os.remove, '{0}c'.format(filename))
+            Pdbi._safe(os.remove, '{0}c'.format(filename))
 
         linecache.clearcache()
 
-        # Calculate difference between files
-        difference = _difference_between_files(Pdbi.TMP_EDIT_PATH, filename)
+        if Pdbi.NO_DIFF_FLAG not in arg:
 
-        if difference:
+            # Calculate difference between files
+            difference = Pdbi._difference_between_files(Pdbi.TMP_EDIT_PATH, filename)
 
-            if Pdbi.NO_DIFF_FLAG not in arg:
+            if difference:
+
                 for diff in difference:
                     line = diff[2]
                     scheme = self.color_scheme_table.active_scheme_name
@@ -309,10 +315,10 @@ class Pdbi(Pdb):
                     print('{0}+++{1}-> {2}{3}'.format(TermColors.LightRed,
                                                       TermColors.LightGreen, diff[0], line), file=io.stdout, end='')
 
-            if Pdbi.NO_RESTART_FLAG not in arg:
-                return_val = self.do_restartp('')
+                if Pdbi.NO_RESTART_FLAG not in arg:
+                    return_val = self.do_restartp('')
 
-        _safe(os.remove, Pdbi.TMP_EDIT_PATH)
+        Pdbi._safe(os.remove, Pdbi.TMP_EDIT_PATH)
 
         return return_val
 
@@ -408,74 +414,78 @@ Continue execution, only stop when a breakpoint is encountered.""", file=self.st
         print("""c(ontinue)f(orever)
 Continue execution until the end of the program.""", file=self.stdout)
 
+    @staticmethod
+    def _get_original_python_run_command():
+        if len(sys.argv) == 1 and sys.argv[0].endswith('py'):
+            sys.argv = ['python'] + sys.argv
 
-def _get_original_python_run_command():
-    if len(sys.argv) == 1 and sys.argv[0].endswith('py'):
-        sys.argv = ['python'] + sys.argv
+        for index, arg in enumerate(sys.argv, 0):
+            if 'ipython' in arg:
+                sys.argv[index] = 'ipython'
+            elif not arg.startswith('-') and not Pdbi._check_number(
+                    arg) and index != 0:  # Wrap all arguments with quotation marks
+                sys.argv[index] = '\"{0}\"'.format(arg.replace('\"', '\''))
 
-    for index, arg in enumerate(sys.argv, 0):
-        if 'ipython' in arg:
-            sys.argv[index] = 'ipython'
-        elif not arg.startswith('-') and not _check_number(arg) and index != 0: # Wrap all arguments with quotation marks
-            sys.argv[index] = '\"{0}\"'.format(arg.replace('\"', '\''))
+        return ' '.join(sys.argv)
 
-    return ' '.join(sys.argv)
+    @staticmethod
+    def _difference_between_files(file_path_a, file_path_b):
+        """
+        Method to calculate the difference between two files
+        :param file_path_a: The path of the first file
+        :param file_path_b: The path of the second file
+        :return: a list of 3 element types showing the difference & line number (4, 'x = 2', 'x = 1')
+        """
+        import difflib
 
-def _difference_between_files(file_path_a, file_path_b):
-    """
-    Method to calculate the difference between two files
-    :param file_path_a: The path of the first file
-    :param file_path_b: The path of the second file
-    :return: a list of 3 element types showing the difference & line number (4, 'x = 2', 'x = 1')
-    """
-    import difflib
+        difference = difflib.unified_diff(open(file_path_a, 'rb').readlines(), open(file_path_b, 'rb').readlines())
+        difference = [dif[1:] for dif in difference if dif.startswith('-') or dif.startswith('+')][2:]
+        difference = difference[::2] + difference[1::2]
+        itr = iter(difference)
+        difference = zip(itr, itr)
 
-    difference = difflib.unified_diff(open(file_path_a, 'rb').readlines(), open(file_path_b, 'rb').readlines())
-    difference = [dif[1:] for dif in difference if dif.startswith('-') or dif.startswith('+')][2:]
-    difference = difference[::2] + difference[1::2]
-    itr = iter(difference)
-    difference = zip(itr, itr)
+        for lineno, line in enumerate(open(file_path_a, 'rb'), 1):
+            for index in xrange(len(difference)):
+                diff = difference[index]
+                if len(diff) < 3 and diff[0] in line:
+                    difference[index] = (lineno,) + diff
 
-    for lineno, line in enumerate(open(file_path_a, 'rb'), 1):
-        for index in xrange(len(difference)):
-            diff = difference[index]
-            if len(diff) < 3 and diff[0] in line:
-                difference[index] = (lineno,) + diff
+        return difference
 
-    return difference
-
-def _check_number(s):
-    """
-    Function to check if a string is a number
-    :param s: The string to check
-    :return: True if its a number, False otherwise
-    """
-    try:
-        float(s)
-        return True
-    except ValueError:
+    @staticmethod
+    def _check_number(s):
+        """
+        Function to check if a string is a number
+        :param s: The string to check
+        :return: True if its a number, False otherwise
+        """
         try:
-            int(s)
+            float(s)
             return True
         except ValueError:
+            try:
+                int(s)
+                return True
+            except ValueError:
+                pass
+
+        return False
+
+    @staticmethod
+    def _safe(func, *args, **kwargs):
+        """
+        Method to run a function safely.
+        :param func: The function to run
+        :param args: The arguments to pass
+        :param kwargs: The key arguments to pass
+        :return: The function return value or None if it failed.
+        """
+        assert hasattr(func, '__call__')
+
+        try:
+            return func(*args, **kwargs)
+        except:
             pass
-
-    return False
-
-def _safe(func, *args, **kwargs):
-    """
-    Method to run a function safely.
-    :param func: The function to run
-    :param args: The arguments to pass
-    :param kwargs: The key arguments to pass
-    :return: The function return value or None if it failed.
-    """
-    assert hasattr(func, '__call__')
-
-    try:
-        return func(*args, **kwargs)
-    except:
-        pass
 
 
 def wrap_sys_excepthook():
@@ -537,12 +547,12 @@ def main():
         print("usage: pdbi.py scriptfile [arg] ...")
         sys.exit(2)
 
-    mainpyfile = sys.argv[1]     # Get script filename
+    mainpyfile = sys.argv[1]  # Get script filename
     if not os.path.exists(mainpyfile):
         print('Error:', mainpyfile, 'does not exist')
         sys.exit(1)
 
-    del sys.argv[0]         # Hide "pdb.py" from argument list
+    del sys.argv[0]  # Hide "pdb.py" from argument list
 
     # Replace pdb's dir with script's dir in front of module search path.
     sys.path[0] = os.path.dirname(mainpyfile)
@@ -573,6 +583,7 @@ def main():
             pdb.interaction(None, t)
             print("Post mortem debugger finished. The " + mainpyfile +
                   " will be restarted")
+
 
 if __name__ == '__main__':
     main()
