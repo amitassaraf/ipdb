@@ -1,18 +1,6 @@
 Python Debugger Improved
 ========================
 
-Use
----
-
-pdbi is an improvment on ipdb which is a Python Debugger that exports IPython functionality.
-The improvements are aimed at more powerful debugging as well as fixing useless commands.
-
-Example usage:
-::
-
-        import pdbi; pdbi.set_trace()
-
-
 Features
 --------
 
@@ -27,6 +15,33 @@ Features
 * 'restart' command that is used to restart the program based on sys.argv.
 * 'cls/clear' command that clears the screen.
 * Added ability to force ignore commands by prefixing the command with an '!'. For example '!cls' or '!e'.
+
+
+Installation
+------------
+
+Install from pip:
+::
+
+        pip install pdbi
+
+or clone from Github and run:
+::
+
+        python setup.py install
+
+
+Use
+---
+
+pdbi is an improvment on ipdb which is a Python Debugger that exports IPython functionality.
+The improvements are aimed at more powerful debugging as well as fixing useless commands.
+
+Example usage:
+::
+
+        import pdbi; pdbi.set_trace()
+
 
 Contact me
 ----------
