@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Amit Assaraf
+# Copyright (c) 2011, 2012 Godefroid Chapelle
 #
 # This file is part of pdbi.
 # GNU package is free software: you can redistribute it and/or modify it under
